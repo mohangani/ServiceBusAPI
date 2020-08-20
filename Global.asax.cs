@@ -15,15 +15,7 @@ using System.Web.Routing;
 
 namespace ServiceBusAPI
 {
-    public class ApplicationPreload : System.Web.Hosting.IProcessHostPreloadClient
-    {
-        public void Preload(string[] parameters)
-        {
-            new ServiceBusReceiver().Start();
-        }
-
-    }
-
+  
     public class ServiceBusReceiver
     {
         private QueueClient queueClient =
@@ -53,7 +45,7 @@ namespace ServiceBusAPI
         {
             System.IO.File.AppendAllText(@"E:\Service Bus Data Testing\EndTime.txt", DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fffffff") + Environment.NewLine);
 
-            queueClient.CloseAsync().GetAwaiter().GetResult();
+           // queueClient.CloseAsync().GetAwaiter().GetResult();
         }
         private Task MessageBusExceptionHandlerAsync(ExceptionReceivedEventArgs args)
         {
@@ -93,7 +85,7 @@ namespace ServiceBusAPI
             using (token.Register(() => queueClient.AbandonAsync(message.SystemProperties.LockToken)))
             {
                 //first check hash value 
-                if (message.MessageId == ComputeSha256Hash(message.Body))
+                if (message.MessageId == GetHashCode(message.Body))
                 {
                     await writeText(message);
                     await queueClient.CompleteAsync(message.SystemProperties.LockToken);
@@ -153,7 +145,7 @@ namespace ServiceBusAPI
                 var bytes = sha256Hash.ComputeHash(messagebody);
 
                 // Convert byte array to a string   
-                StringBuilder builder = new StringBuilder();
+                StringBuilder builder = new StringBuilder(256);
                 foreach (var item in bytes)
                 {
                     //calling ToString() OverRide Method to format the byte to String  
